@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculator</title>
+  <style>
+    body { font-family: Arial; text-align: center; }
+    #display {
+      font-size: 2rem;
+      margin: 20px;
+      padding: 10px;
+      border: 1px solid #000;
+      min-height: 40px;
+    }
+    button { width: 60px; height: 40px; margin: 5px; font-size: 18px; }
+  </style>
+</head>
+<body>
+
+<h1>Calculator</h1>
+
+<div id="display"></div>
+
+<div>
+  <button>1</button><button>2</button><button>3</button>
+</div>
+<div>
+  <button>4</button><button>5</button><button>6</button>
+</div>
+<div>
+  <button>7</button><button>8</button><button>9</button>
+</div>
+
+<div>
+  <button>0</button><button>.</button>
+  <button>+</button><button>-</button>
+</div>
+
+<div>
+  <button>*</button><button>/</button>
+  <button id="equals">=</button>
+</div>
+
+<button id="clear">Clear</button>
+<button id="backspace">⌫</button>
+
+<script>
+
+
+// 1. BASIC MATH FUNCTIONS
+function add(a, b) { return a + b; }
+function subtract(a, b) { return a - b; }
+function multiply(a, b) { return a * b; }
+
+function divide(a, b) {
+  if (b === 0) return "Nope 😒, you cant't divide by zero";
+  return a / b;
+}
+
+
+// 2. OPERATE FUNCTION
+function operate(a, b, op) {
+  switch (op) {
+    case "+": return add(a, b);
+    case "-": return subtract(a, b);
+    case "*": return multiply(a, b);
+    case "/": return divide(a, b);
+    default: return "Invalid operator";
+  }
+}
+
+
+// 3. STATE ..initial state for num1, num2, operator and our display screen
+let firstNumber = "";
+let secondNumber = "";
+let operator = "";
+let resetDisplay = false;
+
+
+// 4. ELEMENTS
+const display = document.getElementById("display");
+const buttons = document.querySelectorAll("button");
+const equalsBtn = document.getElementById("equals");
+const clearBtn = document.getElementById("clear");
+const backspaceBtn = document.getElementById("backspace");
+
+
+// 5. UPDATE DISPLAY LOGIC
+function updateDisplay(value) {
+    // if we reset the screen...which now makes reset display true
+    // let display be empty
+  if (resetDisplay) {
+    display.textContent = "";
+    // we set display again to false..empty
+    resetDisplay = false;
+  }
+  display.textContent += value;
+}
+
+
+// Calculate once
+function calculate(){
+   
+    let result = operate(
+        Number(firstNumber), 
+        Number(secondNumber), 
+        operator
+    );
+
+
+    result = Math.round(result * 1000) / 1000;
+
+    display.textContent = `${firstNumber} ${operator} ${secondNumber} = ${result}`;
+
+    firstNumber = result.toString();
+    secondNumber = "";
+    operator = "";
+    resetDisplay = true
+    
+}
+
+
+// 6. HANDLE BUTTON CLICKS
+buttons.forEach(button => {
+  button.addEventListener("click", () => {
+    const value = button.textContent;
+
+    // NUMBER OR DOT
+    if (!isNaN(value) || value === ".") {
+
+      // prevent multiple decimals
+      if (value === "." && display.textContent.includes(".")) return;
+
+      updateDisplay(value);
+
+    //   if there is no operator, we update the value of firstNumber
+    // if there is operator, we update the value of secondNumber
+      if (operator === "") {
+        firstNumber += value;
+      } else {
+        secondNumber += value;
+      }
+    }
+
+    // OPERATORS..array of operators...if any of this is the value clicked
+    if (["+", "-", "*", "/"].includes(value)) {
+
+      // replace operator instead of calculating
+    //   if there is operator but no secondNumber
+      if (operator && !secondNumber) {
+        operator = value;
+
+        display.textContent = `${firstNumber} ${operator}`
+        // we assign operator the value and do nothing
+        return;
+      }
+
+      // chain calculation
+      if (firstNumber && secondNumber) {
+        calculate()
+      }
+
+      operator = value;
+      display.textContent = `${firstNumber} ${operator}`
+      resetDisplay = false;
+    }
+  });
+});
+
+
+// 7. EQUALS
+
+equalsBtn.addEventListener("click", () => {
+  if (!firstNumber || !secondNumber || !operator) return;
+calculate()
+});
+
+
+// 8. CLEAR
+clearBtn.addEventListener("click", () => {
+  firstNumber = "";
+  secondNumber = "";
+  operator = "";
+  display.textContent = "";
+});
+
+
+// 9. BACKSPACE
+backspaceBtn.addEventListener("click", () => {
+  display.textContent = display.textContent.slice(0, -1);
+
+  if (operator === "") {
+    firstNumber = firstNumber.slice(0, -1);
+  } else {
+    secondNumber = secondNumber.slice(0, -1);
+  }
+});
+
+
+// 10. KEYBOARD SUPPORT
+document.addEventListener("keydown", (e) => {
+  const key = e.key;
+
+  if (!isNaN(key) || key === ".") {
+    updateDisplay(key);
+    if (operator === "") firstNumber += key;
+    else secondNumber += key;
+  }
+
+  if (["+", "-", "*", "/"].includes(key)) {
+    operator = key;
+   display.textContent = `${firstNumber} ${operator}`
+  }
+
+  if (key === "Enter") equalsBtn.click();
+  if (key === "Backspace") backspaceBtn.click();
+  if (key === "Escape") clearBtn.click();
+});
+
+</script>
+
+</body>
+</html>
